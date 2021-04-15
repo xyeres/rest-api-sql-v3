@@ -85,5 +85,15 @@ module.exports = (sequelize) => {
         }
     }, { sequelize });
 
+    User.associate = (models) => {
+        User.hasMany(models.Course, {
+          as: 'student', // alias
+          foreignKey: {
+            fieldName: 'studentUserId',
+            allowNull: false,
+          },
+        });
+      };
+
     return User;
 };
