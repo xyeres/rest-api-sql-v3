@@ -51,7 +51,7 @@ module.exports = (sequelize) => {
             }
         },
         password: {
-            type: DataTypes.VIRTUAL,
+            type: DataTypes.STRING,
             allowNull: false,
             validate: {
                 notNull: {
@@ -67,29 +67,29 @@ module.exports = (sequelize) => {
                 }
             }
         },
-        confirmedPassword: {
-            type: DataTypes.STRING,
-            allowNull: false,
-            set(val) {
-                if (val === this.password) {
-                    const hashedPassword = bcrypt.hashSync(val, 10)
-                    // Sequelize will call this setter and run the hash before persisting to DB
-                    this.setDataValue('confirmedPassword', hashedPassword)
-                }
-            },
-            validate: {
-                notNull: {
-                    msg: "Both passwords must match"
-                }
-            }
-        }
+        // confirmedPassword: {
+        //     type: DataTypes.STRING,
+        //     allowNull: false,
+        //     set(val) {
+        //         if (val === this.password) {
+        //             const hashedPassword = bcrypt.hashSync(val, 10)
+        //             // Sequelize will call this setter and run the hash before persisting to DB
+        //             this.setDataValue('confirmedPassword', hashedPassword)
+        //         }
+        //     },
+        //     validate: {
+        //         notNull: {
+        //             msg: "Both passwords must match"
+        //         }
+        //     }
+        // }
     }, { sequelize });
 
     User.associate = (models) => {
         User.hasMany(models.Course, {
           as: 'student', // alias
           foreignKey: {
-            fieldName: 'studentUserId',
+            fieldName: 'userId',
             allowNull: false,
           },
         });
