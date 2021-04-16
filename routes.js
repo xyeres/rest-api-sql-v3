@@ -124,22 +124,25 @@ router.post('/courses', authenticateUser, asyncHandler(async (req, res) => {
 router.put('/courses/:id', authenticateUser, asyncHandler(async (req, res) => {
     const errors = [];
     const course = req.body;
-    const user = req.body.currentUser;
-
+    const user = req.currentUser.dataValues;
     const targetCourse = await Course.findByPk(req.params.id); // The course to be updated
 
     if (targetCourse) { // Make sure the course in question exists before trying to update
-        if (!course.title) {
-            errors.push('Please provide a value for \"title\"');
+        if (targetCourse.userId === user.id) { // Make sure current user has authorization to update course
+            if (!course.title) {
+                errors.push('Please provide a value for \"title\"');
+            }
+            if (!course.description) {
+                errors.push('Please provide a value for \"description\"');
+            }
+            if (errors.length > 0) {
+                res.status(400).json({ errors });
+            }
+            targetCourse.update(course); // Finally update the course if all values are sent
+            res.status(204).end();
+        } else {
+            res.status(403).end();
         }
-        if (!course.description) {
-            errors.push('Please provide a value for \"description\"');
-        }
-        if (errors.length > 0) {
-            res.status(400).json({ errors });
-        }
-        targetCourse.update(course); // Finally update the course if all values are sent
-        res.status(204).end();
     } else {
         res.status(404).json({ message: "Course not found" });
     }
@@ -147,10 +150,15 @@ router.put('/courses/:id', authenticateUser, asyncHandler(async (req, res) => {
 
 // Delete a course
 router.delete('/courses/:id', authenticateUser, asyncHandler(async (req, res) => {
+    const user = req.currentUser.dataValues;
     const course = await Course.findByPk(req.params.id);
     if (course) {
-        await course.destroy(); // Destroy the course from the DB
-        res.status(204).end();
+        if (course.userId === user.id) { // Check to see if current user has authorization to delete
+            await course.destroy(); // Destroy the course from the DB
+            res.status(204).end();
+        } else {
+            res.status(403).end();
+        }
     } else {
         res.status(404).json({ message: "Course not found" });
     }
