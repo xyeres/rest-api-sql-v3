@@ -63,7 +63,7 @@ app.set('port', process.env.PORT || 5000);
 })();
 
 
-// sync sequelize models and start listening on our port
+// Sync sequelize models and start listening on our port
 sequelize.sync({ force: false }) // set to false so the db doesn't get reset everytime.. change if necessary
   .then(() => {
     const server = app.listen(app.get('port'), () => {
