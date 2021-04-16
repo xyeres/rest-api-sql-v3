@@ -13,10 +13,10 @@ module.exports = (sequelize) => {
             allowNull: false,
             validate: {
                 notNull: {
-                    msg: 'A name is required'
+                    msg: 'A firstName is required'
                 },
                 notEmpty: {
-                    msg: "Please provide a name"
+                    msg: "Please provide a firstName"
                 }
             }
         },
@@ -25,10 +25,10 @@ module.exports = (sequelize) => {
             allowNull: false,
             validate: {
                 notNull: {
-                    msg: 'A name is required'
+                    msg: 'A lastName is required'
                 },
                 notEmpty: {
-                    msg: "Please provide a name"
+                    msg: "Please provide a lastName"
                 }
             }
         },
