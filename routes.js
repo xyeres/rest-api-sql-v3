@@ -16,6 +16,7 @@ const Course = require('./models').Course;
 /*
     USER ROUTES
 */
+
 // Get current user
 router.get("/users", authenticateUser, asyncHandler(async (req, res) => {
     const user = req.currentUser;
@@ -26,6 +27,7 @@ router.get("/users", authenticateUser, asyncHandler(async (req, res) => {
 router.post('/users', asyncHandler(async (req, res) => {
     const user = req.body;
     const errors = [];
+
     if (!user.firstName) {
         errors.push("Please provide a value for \"firstName\"");
     }
@@ -68,7 +70,7 @@ router.get('/courses', asyncHandler(async (req, res) => {
 router.get('/courses/:id', asyncHandler(async (req, res) => {
     const courseId = req.params.id;
 
-    const course = await Course.findOne({ // this may not work???
+    const course = await Course.findOne({ // find course and include related students
         where: { id: courseId },
         include: [
             {
@@ -84,6 +86,7 @@ router.get('/courses/:id', asyncHandler(async (req, res) => {
 router.post('/courses', authenticateUser, asyncHandler(async (req, res) => {
     const errors = [];
     const course = req.body;
+
     if (!course.title) {
         errors.push('Please provide a value for \"title\"');
     }
@@ -91,7 +94,7 @@ router.post('/courses', authenticateUser, asyncHandler(async (req, res) => {
         errors.push('Please provide a value for \"description\"');
     }
     if (errors.length > 0) {
-        res.status(400).json({errors});
+        res.status(400).json({ errors });
     }
     else {
         const newCourse = await Course.create(course);
@@ -103,7 +106,9 @@ router.post('/courses', authenticateUser, asyncHandler(async (req, res) => {
 router.put('/courses/:id', authenticateUser, asyncHandler(async (req, res) => {
     const errors = [];
     const course = req.body;
-    const targetCourse = await Course.findByPk(req.params.id);
+
+    const targetCourse = await Course.findByPk(req.params.id); // The course to be updated
+
     if (targetCourse) { // Make sure the course in question exists before trying to update
         if (!course.title) {
             errors.push('Please provide a value for \"title\"');
@@ -112,7 +117,7 @@ router.put('/courses/:id', authenticateUser, asyncHandler(async (req, res) => {
             errors.push('Please provide a value for \"description\"');
         }
         if (errors.length > 0) {
-            res.status(400).json({errors});
+            res.status(400).json({ errors });
         }
         targetCourse.update(course); // Finally update the course if all values are sent
         res.status(204).end();
