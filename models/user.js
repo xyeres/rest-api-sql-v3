@@ -36,24 +36,24 @@ module.exports = (sequelize) => {
             type: DataTypes.STRING,
             allowNull: false,
             unique: {
-                msg: "The email you entered already exists"
+                msg: "The email address already exists"
             },
             validate: {
                 notNull: {
-                    msg: 'An email is required'
+                    msg: 'An email address is required'
                 },
                 notEmpty: {
-                    msg: "Please provide an email"
+                    msg: "Please provide an email address"
                 },
                 isEmail: {
-                    msg: "Please provide a valid email"
+                    msg: "Please provide a valid email address"
                 }
             }
         },
         password: {
             type: DataTypes.STRING,
             allowNull: false,
-            set(val) {
+            set(val) { // Go ahead and hash the password before its persisted
                 const hashedPass = bcrypt.hashSync(val, 10);
                 this.setDataValue('password', hashedPass);
             },
@@ -69,7 +69,7 @@ module.exports = (sequelize) => {
     }, { sequelize });
 
     User.associate = (models) => {
-        User.hasMany(models.Course, {
+        User.hasMany(models.Course, { // establish m2m  relationship
           as: 'student', // alias
           foreignKey: {
             fieldName: 'userId',

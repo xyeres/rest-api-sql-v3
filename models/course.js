@@ -12,10 +12,10 @@ module.exports = (sequelize) => {
             allowNull: false,
             validate: {
                 notNull: {
-                    msg: 'A title is required'
+                    msg: 'A course title is required'
                 },
                 notEmpty: {
-                    msg: "Please provide a title"
+                    msg: "Please provide a course title"
                 }
             }
         },
@@ -24,10 +24,10 @@ module.exports = (sequelize) => {
             allowNull: false,
             validate: {
                 notNull: {
-                    msg: 'A description is required'
+                    msg: "A course description is required"
                 },
                 notEmpty: {
-                    msg: "Please provide a description"
+                    msg: "Please provide a course description"
                 }
             }
         },
@@ -42,7 +42,7 @@ module.exports = (sequelize) => {
     }, { sequelize });
 
     Course.associate = (models) => {
-        Course.belongsTo(models.User, {
+        Course.belongsTo(models.User, { // establish 1-1 relationship
             as: 'student', // alias
             foreignKey: {
                 fieldName: 'userId',
