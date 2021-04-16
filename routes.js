@@ -24,8 +24,26 @@ router.get("/users", authenticateUser, asyncHandler(async (req, res) => {
 
 // Create new user
 router.post('/users', asyncHandler(async (req, res) => {
-    await User.create(req.body);
-    res.status(201).location('/').end();
+    const user = req.body;
+    const errors = [];
+    if (!user.firstName) {
+        errors.push("Please provide a value for \"firstName\"");
+    }
+    if (!user.lastName) {
+        errors.push("Please provide a value for \"lastName\"");
+    }
+    if (!user.emailAddress) {
+        errors.push("Please provide a value for \"emailAddress\"");
+    }
+    if (!user.password) {
+        errors.push("Please provide a value for \"password\"");
+    }
+    if (errors.length > 0) {
+        res.status(400).json({ errors });
+    } else {
+        await User.create(user);
+        res.status(201).location('/').end();
+    }
 }));
 
 /*
@@ -64,15 +82,39 @@ router.get('/courses/:id', asyncHandler(async (req, res) => {
 
 // Create new course
 router.post('/courses', authenticateUser, asyncHandler(async (req, res) => {
-    const course = await Course.create(req.body);
-    res.status(201).location('/api/courses/' + course.id).end();
+    const errors = [];
+    const course = req.body;
+    if (!course.title) {
+        errors.push('Please provide a value for \"title\"');
+    }
+    if (!course.description) {
+        errors.push('Please provide a value for \"description\"');
+    }
+    if (errors.length > 0) {
+        res.status(400).json({errors});
+    }
+    else {
+        const newCourse = await Course.create(course);
+        res.status(201).location('/api/courses/' + newCourse.id).end();
+    }
 }));
 
 // Update a course
 router.put('/courses/:id', authenticateUser, asyncHandler(async (req, res) => {
-    const course = await Course.findByPk(req.params.id);
-    if (course) {
-        course.update(req.body);
+    const errors = [];
+    const course = req.body;
+    const targetCourse = await Course.findByPk(req.params.id);
+    if (targetCourse) { // Make sure the course in question exists before trying to update
+        if (!course.title) {
+            errors.push('Please provide a value for \"title\"');
+        }
+        if (!course.description) {
+            errors.push('Please provide a value for \"description\"');
+        }
+        if (errors.length > 0) {
+            res.status(400).json({errors});
+        }
+        targetCourse.update(course); // Finally update the course if all values are sent
         res.status(204).end();
     } else {
         res.status(404).json({ message: "Course not found" });
@@ -83,7 +125,7 @@ router.put('/courses/:id', authenticateUser, asyncHandler(async (req, res) => {
 router.delete('/courses/:id', authenticateUser, asyncHandler(async (req, res) => {
     const course = await Course.findByPk(req.params.id);
     if (course) {
-        await course.destroy();
+        await course.destroy(); // Destroy the course from the DB
         res.status(204).end();
     } else {
         res.status(404).json({ message: "Course not found" });
