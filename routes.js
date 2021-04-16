@@ -19,7 +19,12 @@ const Course = require('./models').Course;
 
 // Get current user
 router.get("/users", authenticateUser, asyncHandler(async (req, res) => {
-    const user = req.currentUser;
+    const currentUser = req.currentUser.dataValues;
+    const user = Object.assign({}, currentUser); // shallow copy the object
+    delete user.password; // remove properties
+    delete user.createdAt;
+    delete user.updatedAt;
+
     res.status(200).json(user);
 }));
 
@@ -27,24 +32,32 @@ router.get("/users", authenticateUser, asyncHandler(async (req, res) => {
 router.post('/users', asyncHandler(async (req, res) => {
     const user = req.body;
     const errors = [];
-
-    if (!user.firstName) {
-        errors.push("Please provide a value for \"firstName\"");
-    }
-    if (!user.lastName) {
-        errors.push("Please provide a value for \"lastName\"");
-    }
-    if (!user.emailAddress) {
-        errors.push("Please provide a value for \"emailAddress\"");
-    }
-    if (!user.password) {
-        errors.push("Please provide a value for \"password\"");
-    }
-    if (errors.length > 0) {
-        res.status(400).json({ errors });
-    } else {
-        await User.create(user);
-        res.status(201).location('/').end();
+    try {
+        if (!user.firstName) {
+            errors.push("Please provide a value for \"firstName\"");
+        }
+        if (!user.lastName) {
+            errors.push("Please provide a value for \"lastName\"");
+        }
+        if (!user.emailAddress) {
+            errors.push("Please provide a value for \"emailAddress\"");
+        }
+        if (!user.password) {
+            errors.push("Please provide a value for \"password\"");
+        }
+        if (errors.length > 0) {
+            res.status(400).json({ errors });
+        } else {
+            await User.create(user);
+            res.status(201).location('/').end();
+        }
+    } catch (error) {
+        if (error.name === 'SequelizeValidationError' || error.name === 'SequelizeUniqueConstraintError') {
+            const errors = error.errors.map(err => err.message);
+            res.status(400).json({ errors });
+        } else {
+            throw error;
+        }
     }
 }));
 
@@ -58,9 +71,11 @@ router.get('/courses', asyncHandler(async (req, res) => {
         include: [
             {
                 model: User,
-                as: 'student',
+                as: 'user',
+                attributes: { exclude: ['createdAt', 'updatedAt'] }
             },
         ],
+        attributes: { exclude: ['createdAt', 'updatedAt'] }
     });
 
     res.status(200).json(courses);
@@ -70,14 +85,17 @@ router.get('/courses', asyncHandler(async (req, res) => {
 router.get('/courses/:id', asyncHandler(async (req, res) => {
     const courseId = req.params.id;
 
-    const course = await Course.findOne({ // find course and include related students
+    const course = await Course.findOne({ // find course and include related users
         where: { id: courseId },
         include: [
             {
                 model: User,
-                as: 'student',
+                as: 'user',
+                attributes: { exclude: ['createdAt', 'updatedAt'] }
             },
         ],
+        attributes: { exclude: ['createdAt', 'updatedAt'] }
+
     });
     res.status(200).json(course);
 }));
@@ -106,6 +124,7 @@ router.post('/courses', authenticateUser, asyncHandler(async (req, res) => {
 router.put('/courses/:id', authenticateUser, asyncHandler(async (req, res) => {
     const errors = [];
     const course = req.body;
+    const user = req.body.currentUser;
 
     const targetCourse = await Course.findByPk(req.params.id); // The course to be updated
 
