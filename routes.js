@@ -80,22 +80,14 @@ router.post('/courses', authenticateUser, asyncHandler(async (req, res) => {
 
 // Update a course
 router.put('/courses/:id', authenticateUser, asyncHandler(async (req, res) => {
-    const errors = [];
-    const course = req.body;
     const user = req.currentUser;
-    const targetCourse = await Course.findByPk(req.params.id); // The course to be updated
-    if (targetCourse) { // Make sure the course in question exists before trying to update
-        if (targetCourse.userId === user.id) { // Make sure current user has authorization to update course
-            if (!course.title) {
-                errors.push('Please provide a value for \"title\"');
-            }
-            if (!course.description) {
-                errors.push('Please provide a value for \"description\"');
-            }
-            if (errors.length > 0) {
-                res.status(400).json({ errors });
-            }
-            targetCourse.update(course); // Finally update the course if all values are sent
+    // The course to be updated
+    const targetCourse = await Course.findByPk(req.params.id);
+    if (targetCourse) {
+        // Make sure current user has authorization to update course
+        if (targetCourse.userId === user.id) {
+            // Finally update the course if all values are sent
+            await Course.update(req.body, { where: { id: req.params.id } });
             res.status(204).end();
         } else {
             res.status(403).end();
